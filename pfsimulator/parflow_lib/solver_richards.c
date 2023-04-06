@@ -248,7 +248,7 @@ typedef struct {
   Vector *x_velocity;           /* vector containing x-velocity face values */
   Vector *y_velocity;           /* vector containing y-velocity face values */
   Vector *z_velocity;           /* vector containing z-velocity face values */
-  Vector *ice_fraction;         /*  soil ice fraction from eCLM */
+  Vector *ice_fraction;         /* soil ice fraction from eCLM */
 #ifdef HAVE_CLM
   /* RM: vars for pf printing of clm output */
   Vector *eflx_lh_tot;          /* total LH flux from canopy height to atmosphere [W/m^2] */
@@ -849,6 +849,9 @@ SetupRichards(PFModule * this_module)
     /*sk Initialize LSM terms */
     instance_xtra->evap_trans = NewVectorType(grid, 1, 1, vector_cell_centered);
     InitVectorAll(instance_xtra->evap_trans, 0.0);
+
+    instance_xtra->ice_fraction = NewVectorType(grid, 1, 1, vector_cell_centered);
+    InitVectorAll(instance_xtra->ice_fraction, 1.0);
 
     if (public_xtra->evap_trans_file)
     {
@@ -1777,7 +1780,7 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
         sp = SubvectorData(s_sub);
         pp = SubvectorData(p_sub);
         et = SubvectorData(et_sub);
-        ice_frac = SubvectorData(et_sub);
+        ice_frac = SubvectorData(ice_frac_sub);
         ms = SubvectorData(m_sub);
         po_dat = SubvectorData(po_sub);
         dz_dat = SubvectorData(dz_sub);
@@ -2883,10 +2886,10 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
                                    instance_xtra->old_pressure,
                                    evap_trans,
                                    instance_xtra->ovrl_bc_flx,
+                                   instance_xtra->ice_fraction,
                                    instance_xtra->x_velocity,
                                    instance_xtra->y_velocity,
-                                   instance_xtra->z_velocity,
-                                   instance_xtra->ice_fraction));
+                                   instance_xtra->z_velocity));
 
       if (retval != 0)
       {
