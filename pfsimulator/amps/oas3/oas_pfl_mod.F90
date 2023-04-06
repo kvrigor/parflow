@@ -176,16 +176,18 @@ contains
     deallocate(pressure_3d)
   end subroutine send_fld2_clm
 
-  subroutine receive_fld2_clm(evap_trans, topo, ix, iy, nx, ny, nz, nx_f, ny_f, pstep) bind(c, name='receive_fld2_clm_')
+  subroutine receive_fld2_clm(evap_trans, ice_fraction, topo, ix, iy, nx, ny, nz, nx_f, ny_f, pstep) bind(c, name='receive_fld2_clm_')
     !-----------------------------------------------
     ! Receives evapotranspiration fluxes from eCLM.
     !-----------------------------------------------
-    integer,      intent(in)    :: ix, iy,                        & ! starting coordinate of the subgrid (UNUSED)
-                                   nx, ny, nz,                    & ! subgrid dimensions
-                                   nx_f, ny_f                       ! dimensions of ET subvector
-    real(kind=8), intent(in)    :: pstep,                         & ! current model time in hours
-                                   topo((nx+2)*(ny+2)*(nz+2))       ! topography mask (0 for inactive, 1 for active)
-    real(kind=8), intent(inout) :: evap_trans((nx+2)*(ny+2)*(nz+2)) ! evapotranspiration [1/hrs]
+    integer,      intent(in)    :: ix, iy,                        &   ! starting coordinate of the subgrid (UNUSED)
+                                   nx, ny, nz,                    &   ! subgrid dimensions
+                                   nx_f, ny_f                         ! dimensions of ET subvector
+    real(kind=8), intent(in)    :: pstep,                         &   ! current model time in hours
+                                   topo((nx+2)*(ny+2)*(nz+2))         ! topography mask (0 for inactive, 1 for active)
+    real(kind=8), intent(inout) :: evap_trans((nx+2)*(ny+2)*(nz+2))   ! evapotranspiration [1/hrs]
+    real(kind=8), intent(inout) :: ice_fraction((nx+2)*(ny+2)*(nz+2)) ! soil ice fraction
+
                                                                     ! (nx+2)*(ny+2)*(nz+2) = total number of subgrid cells; the
                                                                     !  extra "+2" terms account for the ghost nodes/halo points
 
@@ -196,9 +198,12 @@ contains
     integer                     :: z                                ! subsurface level (z=nz topmost layer, z=1 deepest layer)
     integer                     :: top_z_level(nx,ny)               ! topmost z level of active ParFlow cells
     real(kind=8), allocatable   :: evap_trans_3d(:,:,:)             ! Root ET fluxes received from eCLM [1/hrs]
+    real(kind=8), allocatable   :: ice_frac_3d(:,:,:)               ! Soil ice fraction received from eCLM [unitless; values from 0 to 1]
 
     ! Receive ET fluxes from eCLM
     allocate(evap_trans_3d(nx,ny,nlevsoi))
+    allocate(ice_frac_3d(nx,ny,nlevsoi))
+
     seconds_elapsed = nint(pstep*3600.d0)
     call oasis_get(et_id, seconds_elapsed, evap_trans_3d, ierror)
 
@@ -211,13 +216,14 @@ contains
           do k = 1, nlevsoi               !    eCLM: 1=topmost layer, nlevsoi=deepest layer
             z = top_z_level(i,j) - (k-1)  ! ParFlow: 1=deepest layer, nz=topmost layer
             l = flattened_array_index(i, j, z, nx_f, ny_f)
-            evap_trans(l) = evap_trans_3d(i,j,k)
+            evap_trans(l)   = evap_trans_3d(i,j,k)
+            ice_fraction(l) = ice_frac_3d(i,j,k)
           end do
         end if
       end do
     end do
 
-    deallocate(evap_trans_3d)
+    deallocate(evap_trans_3d, ice_frac_3d)
   end subroutine receive_fld2_clm
 
   function get_top_z_level(nx, ny, nz, topo)

@@ -507,11 +507,11 @@ void    RichardsJacobianEval(
   /* Calculate rel_perm and rel_perm_der */
 
   PFModuleInvokeType(PhaseRelPermInvoke, rel_perm_module,
-                     (rel_perm, pressure, density, gravity, problem_data,
+                     (rel_perm, pressure, density, NULL, gravity, problem_data,
                       CALCFCN));
 
   PFModuleInvokeType(PhaseRelPermInvoke, rel_perm_module,
-                     (rel_perm_der, pressure, density, gravity, problem_data,
+                     (rel_perm_der, pressure, density, NULL, gravity, problem_data,
                       CALCDER));
 
   /* Calculate contributions from second order derivatives and gravity */

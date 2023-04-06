@@ -51,6 +51,7 @@ typedef struct {
   double       *outflow;  /*sk*/
 
   Vector       *evap_trans;  /*sk*/
+  Vector       *ice_fraction;
   Vector       *ovrl_bc_flx;  /*sk*/
 
   Vector       *x_velocity;  //jjb
@@ -83,6 +84,7 @@ typedef struct {
 #define StateOutflow(state)       ((state)->outflow) /*sk*/
 #define StateEvapTrans(state)     ((state)->evap_trans) /*sk*/
 #define StateOvrlBcFlx(state)     ((state)->ovrl_bc_flx) /*sk*/
+#define StateIceFraction(state)   ((state)->ice_fraction)
 #define StateXvel(state)          ((state)->x_velocity) //jjb
 #define StateYvel(state)          ((state)->y_velocity) //jjb
 #define StateZvel(state)          ((state)->z_velocity) //jjb

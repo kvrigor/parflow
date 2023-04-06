@@ -248,6 +248,7 @@ typedef struct {
   Vector *x_velocity;           /* vector containing x-velocity face values */
   Vector *y_velocity;           /* vector containing y-velocity face values */
   Vector *z_velocity;           /* vector containing z-velocity face values */
+  Vector *ice_fraction;         /*  soil ice fraction from eCLM */
 #ifdef HAVE_CLM
   /* RM: vars for pf printing of clm output */
   Vector *eflx_lh_tot;          /* total LH flux from canopy height to atmosphere [W/m^2] */
@@ -1571,8 +1572,8 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
 #ifdef HAVE_OAS3
   Grid *grid = (instance_xtra->grid);
   Subgrid *subgrid;
-  Subvector *p_sub, *s_sub, *et_sub, *m_sub, *po_sub, *dz_sub;
-  double *pp, *sp, *et, *ms, *po_dat, *dz_dat;
+  Subvector *p_sub, *s_sub, *et_sub, *ice_frac_sub, *m_sub, *po_sub, *dz_sub;
+  double *pp, *sp, *et, *ice_frac, *ms, *po_dat, *dz_dat;
   double sw_lat = .0;
   double sw_lon = .0;
 #endif
@@ -1759,6 +1760,7 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
         p_sub = VectorSubvector(instance_xtra->pressure, is);
         s_sub = VectorSubvector(instance_xtra->saturation, is);
         et_sub = VectorSubvector(evap_trans, is);
+        ice_frac_sub = VectorSubvector(instance_xtra->ice_fraction, is);
         m_sub = VectorSubvector(instance_xtra->mask, is);
         po_sub = VectorSubvector(porosity, is);
         dz_sub = VectorSubvector(instance_xtra->dz_mult, is);
@@ -1775,6 +1777,7 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
         sp = SubvectorData(s_sub);
         pp = SubvectorData(p_sub);
         et = SubvectorData(et_sub);
+        ice_frac = SubvectorData(et_sub);
         ms = SubvectorData(m_sub);
         po_dat = SubvectorData(po_sub);
         dz_dat = SubvectorData(dz_sub);
@@ -1782,10 +1785,12 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
         CALL_send_fld2_clm(pp, sp, ms, ix, iy, nx, ny, nz, nx_f, ny_f,
                            t,po_dat,dz_dat);
         amps_Sync(amps_CommWorld);
-        CALL_receive_fld2_clm(et, ms, ix, iy, nx, ny, nz, nx_f, ny_f, t);
+        CALL_receive_fld2_clm(et, ice_frac, ms, ix, iy, nx, ny, nz, nx_f, ny_f, t);
       }
       amps_Sync(amps_CommWorld);
       handle = InitVectorUpdate(evap_trans, VectorUpdateAll);
+      FinalizeVectorUpdate(handle);
+      handle = InitVectorUpdate(instance_xtra->ice_fraction, VectorUpdateAll);
       FinalizeVectorUpdate(handle);
 #endif // end to HAVE_OAS3 CALL
 
@@ -2880,7 +2885,8 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
                                    instance_xtra->ovrl_bc_flx,
                                    instance_xtra->x_velocity,
                                    instance_xtra->y_velocity,
-                                   instance_xtra->z_velocity));
+                                   instance_xtra->z_velocity,
+                                   instance_xtra->ice_fraction));
 
       if (retval != 0)
       {

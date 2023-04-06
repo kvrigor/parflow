@@ -84,8 +84,9 @@ void     KINSolFunctionEval(
   Vector      *old_density = StateOldDensity(((State*)current_state));
   double dt = StateDt(((State*)current_state));
   double time = StateTime(((State*)current_state));
-  Vector       *evap_trans = StateEvapTrans(((State*)current_state));
-  Vector       *ovrl_bc_flx = StateOvrlBcFlx(((State*)current_state));
+  Vector      *evap_trans = StateEvapTrans(((State*)current_state));
+  Vector      *ovrl_bc_flx = StateOvrlBcFlx(((State*)current_state));
+  Vector      *ice_fraction = StateIceFraction(((State*)current_state));
 
   /* velocity vectors jjb */
   Vector       *x_velocity = StateXvel(((State*)current_state));
@@ -97,7 +98,7 @@ void     KINSolFunctionEval(
   PFModuleInvokeType(NlFunctionEvalInvoke, nl_function_eval,
                      (pressure, fval, problem_data, saturation, old_saturation,
                       density, old_density, dt, time, old_pressure, evap_trans,
-                      ovrl_bc_flx, x_velocity, y_velocity, z_velocity));
+                      ovrl_bc_flx, ice_fraction, x_velocity, y_velocity, z_velocity));
 
   return;
 }
@@ -117,9 +118,10 @@ void NlFunctionEval(Vector *     pressure, /* Current pressure values */
                     double       dt, /* Time step size */
                     double       time, /* New time value */
                     Vector *     old_pressure,
-                    Vector *     evap_trans, /*sk sink term from land surface model*/
-                    Vector *     ovrl_bc_flx, /*sk overland flow boundary fluxes*/
-                    Vector *     x_velocity, /* velocity vectors jjb */
+                    Vector *     evap_trans,    /*sk sink term from land surface model*/
+                    Vector *     ovrl_bc_flx,   /*sk overland flow boundary fluxes*/
+                    Vector *     ice_fraction,  /* soil ice fraction */
+                    Vector *     x_velocity,    /* velocity vectors jjb */
                     Vector *     y_velocity,
                     Vector *     z_velocity)
 {
@@ -538,7 +540,7 @@ void NlFunctionEval(Vector *     pressure, /* Current pressure values */
    * phase source values */
 
   PFModuleInvokeType(PhaseRelPermInvoke, rel_perm_module,
-                     (rel_perm, pressure, density, gravity, problem_data,
+                     (rel_perm, pressure, density, ice_fraction, gravity, problem_data,
                       CALCFCN));
 
 
@@ -562,6 +564,7 @@ void NlFunctionEval(Vector *     pressure, /* Current pressure values */
     permx_sub = VectorSubvector(permeability_x, is);
     permy_sub = VectorSubvector(permeability_y, is);
     permz_sub = VectorSubvector(permeability_z, is);
+
     /* @RMM added to provide access to x/y slopes */
     x_ssl_sub = VectorSubvector(x_ssl, is);
     y_ssl_sub = VectorSubvector(y_ssl, is);

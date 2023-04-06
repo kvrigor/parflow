@@ -1,4 +1,4 @@
-SUBROUTINE receive_fld2_clm(evap_trans,topo,ix,iy,nx,ny,nz,nx_f,ny_f,pstep)
+SUBROUTINE receive_fld2_clm(evap_trans,ice_fraction,topo,ix,iy,nx,ny,nz,nx_f,ny_f,pstep)
 
 !----------------------------------------------------------------------------
 !
@@ -46,7 +46,7 @@ INTEGER, INTENT(IN)                :: ix, iy,                           &!
 REAL(KIND=8), INTENT(IN)           :: pstep                              ! Parflow model time-step in hours
 REAL(KIND=8), INTENT(IN)           :: topo((nx+2)*(ny+2)*(nz+2))         ! mask    (0 for inactive, 1 for active)
 REAL(KIND=8), INTENT(INOUT)        :: evap_trans((nx+2)*(ny+2)*(nz+2))   ! source/sink (1/T)
-
+REAL(KIND=8), INTENT(INOUT)        :: ice_fraction((nx+2)*(ny+2)*(nz+2)) ! soil ice fraction
                                                                          ! All vecotrs from parflow on grid w/ ghost nodes for current proc
 !Local Variables 
 
@@ -102,6 +102,7 @@ CHARACTER(len=19)                  :: foupname
  ENDDO
 !
  evap_trans = 0.   !CPS initialize for masking
+ ice_fraction = 1.
  DO i = 1, nx
    DO j = 1, ny
      DO k = 1, nlevsoil 

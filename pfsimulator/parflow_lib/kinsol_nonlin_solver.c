@@ -197,7 +197,7 @@ void PrintFinalStats(
  * KinsolNonlinSolver
  *--------------------------------------------------------------------------*/
 
-int KinsolNonlinSolver(Vector *pressure, Vector *density, Vector *old_density, Vector *saturation, Vector *old_saturation, double t, double dt, ProblemData *problem_data, Vector *old_pressure, Vector *evap_trans, Vector *ovrl_bc_flx, Vector *x_velocity, Vector *y_velocity, Vector *z_velocity)
+int KinsolNonlinSolver(Vector *pressure, Vector *density, Vector *old_density, Vector *saturation, Vector *old_saturation, double t, double dt, ProblemData *problem_data, Vector *old_pressure, Vector *evap_trans, Vector *ovrl_bc_flx, Vector *x_velocity, Vector *y_velocity, Vector *z_velocity, Vector *ice_fraction)
 {
   PFModule     *this_module = ThisPFModule;
   PublicXtra   *public_xtra = (PublicXtra*)PFModulePublicXtra(this_module);
@@ -246,6 +246,7 @@ int KinsolNonlinSolver(Vector *pressure, Vector *density, Vector *old_density, V
   StatePrecond(current_state) = precond;
   StateEvapTrans(current_state) = evap_trans;       /*sk*/
   StateOvrlBcFlx(current_state) = ovrl_bc_flx;      /*sk*/
+  StateIceFraction(current_state) = ice_fraction;
   StateXvel(current_state) = x_velocity;           //jjb
   StateYvel(current_state) = y_velocity;           //jjb
   StateZvel(current_state) = z_velocity;           //jjb
