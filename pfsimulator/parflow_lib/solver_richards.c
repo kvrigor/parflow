@@ -186,6 +186,7 @@ typedef struct {
   int write_netcdf_satur;       /* write saturations? */
   int write_netcdf_evaptrans;   /* write evaptrans? */
   int write_netcdf_evaptrans_sum;       /* write evaptrans_sum? */
+  int write_netcdf_ice_frac;    /* write soil ice fraction? */
   int write_netcdf_overland_sum;        /* write overland_sum? */
   int write_netcdf_overland_bc_flux;    /* write overland_bc_flux? */
   int write_netcdf_mask;        /* write mask? */
@@ -851,7 +852,7 @@ SetupRichards(PFModule * this_module)
     InitVectorAll(instance_xtra->evap_trans, 0.0);
 
     instance_xtra->ice_fraction = NewVectorType(grid, 1, 1, vector_cell_centered);
-    InitVectorAll(instance_xtra->ice_fraction, 1.0);
+    InitVectorAll(instance_xtra->ice_fraction, 0.0);
 
     if (public_xtra->evap_trans_file)
     {
@@ -3097,6 +3098,7 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
           || public_xtra->write_netcdf_satur
           || public_xtra->write_netcdf_evaptrans
           || public_xtra->write_netcdf_evaptrans_sum
+          || public_xtra->write_netcdf_ice_frac
           || public_xtra->write_netcdf_overland_sum
           || public_xtra->write_netcdf_overland_bc_flux)
       {
@@ -3271,6 +3273,14 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
         any_file_dumped = 1;
       }
 
+      if (public_xtra->write_netcdf_ice_frac)
+      {
+        sprintf(nc_postfix, "%05d", instance_xtra->file_number);
+        WritePFNC(file_prefix, nc_postfix, t, instance_xtra->ice_fraction,
+                  public_xtra->numVarTimeVariant, "ice_fraction", 3,
+                  false, public_xtra->numVarIni);
+        any_file_dumped = 1;
+      }
 
       if (public_xtra->print_evaptrans_sum
           || public_xtra->write_silo_evaptrans_sum
@@ -5371,6 +5381,15 @@ SolverRichardsNewPublicXtra(char *name)
   }
   public_xtra->write_netcdf_evaptrans = switch_value;
 
+  sprintf(key, "NetCDF.WriteIceFrac");
+  switch_name = GetStringDefault(key, "False");
+  switch_value = NA_NameToIndexExitOnError(switch_na, switch_name, key);
+  if (switch_value == 1)
+  {
+    public_xtra->numVarTimeVariant++;
+  }
+  public_xtra->write_netcdf_ice_frac = switch_value;
+
   sprintf(key, "NetCDF.WriteEvapTransSum");
   switch_name = GetStringDefault(key, "False");
   switch_value = NA_NameToIndexExitOnError(switch_na, switch_name, key);
@@ -5460,6 +5479,7 @@ SolverRichardsNewPublicXtra(char *name)
   if (public_xtra->write_netcdf_press || public_xtra->write_netcdf_satur
       || public_xtra->write_netcdf_evaptrans
       || public_xtra->write_netcdf_evaptrans_sum
+      || public_xtra->write_netcdf_ice_frac
       || public_xtra->write_netcdf_overland_sum
       || public_xtra->write_netcdf_overland_bc_flux)
 

@@ -30,7 +30,7 @@ module oas_pfl_mod
 
   ! Local variables used by OASIS
   integer :: comp_id, rank, ierror
-  integer :: soilliq_id, psi_id, et_id ! coupling field IDs
+  integer :: soilliq_id, psi_id, et_id, ice_frac_id ! coupling field IDs
 
   ! TODO: Get these values from eCLM instead of hardcoding it here
   integer :: nlevsoi  = 20 ! Number of hydrologically active soil layers in eCLM
@@ -109,6 +109,9 @@ contains
     var_nodims(2) = nlevsoi 
 
     call oasis_def_var (et_id, "PFL_ET", part_id, var_nodims, OASIS_In, OASIS_Real, ierror)
+    if (ierror /= 0) call oasis_abort(comp_id, 'oas_pfl_define', 'oasis_def_var failed for PFL_ET')
+
+    call oasis_def_var (ice_frac_id, "PFL_ICE_FRAC", part_id, var_nodims, OASIS_In, OASIS_Real, ierror)
     if (ierror /= 0) call oasis_abort(comp_id, 'oas_pfl_define', 'oasis_def_var failed for PFL_ET')
 
     var_nodims(2) = nlevgrnd
@@ -206,6 +209,7 @@ contains
 
     seconds_elapsed = nint(pstep*3600.d0)
     call oasis_get(et_id, seconds_elapsed, evap_trans_3d, ierror)
+    call oasis_get(ice_frac_id, seconds_elapsed, ice_frac_3d, ierror)
 
     ! Save ET fluxes to ParFlow evap_trans vector
     evap_trans = 0.
