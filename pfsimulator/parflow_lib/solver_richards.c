@@ -4095,6 +4095,7 @@ TeardownRichards(PFModule * this_module)
   FreeVector(instance_xtra->y_velocity);
   FreeVector(instance_xtra->z_velocity);
   FreeVector(instance_xtra->evap_trans);
+  FreeVector(instance_xtra->ice_fraction);
 
   if (instance_xtra->evap_trans_sum)
   {

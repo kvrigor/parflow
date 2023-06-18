@@ -211,6 +211,7 @@ contains
 
     ! Save ET fluxes to ParFlow evap_trans vector
     evap_trans = 0.
+    ice_fraction = 0.
     top_z_level = get_top_z_level(nx, ny, nz, topo)
     do i = 1, nx
       do j = 1, ny
@@ -218,7 +219,7 @@ contains
           do k = 1, nlevgrnd              !    eCLM: 1=topmost layer, nlevsoi=deepest layer
             z = top_z_level(i,j) - (k-1)  ! ParFlow: 1=deepest layer, nz=topmost layer
             l = flattened_array_index(i, j, z, nx_f, ny_f)
-            if (k <= nlevsoi) evap_trans(l)   = evap_trans_3d(i,j,k)
+            if (k <= nlevsoi) evap_trans(l) = evap_trans_3d(i,j,k)
             ice_fraction(l) = ice_frac_3d(i,j,k)
           end do
         end if
