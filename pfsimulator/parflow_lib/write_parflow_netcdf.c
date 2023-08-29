@@ -948,7 +948,7 @@ int LookUpInventory(char * varName, varNCData **myVarNCData, int *netCDFIDs)
     return evaptransVarID;
   }
 
-  if (strcmp(varName, "ice_fraction") == 0)
+  if (strcmp(varName, "ice_impedance") == 0)
   {
     *myVarNCData = malloc(sizeof(varNCData));
     (*myVarNCData)->varName = varName;

@@ -185,10 +185,10 @@ typedef struct {
   int write_netcdf_press;       /* write pressures? */
   int write_netcdf_satur;       /* write saturations? */
   int write_netcdf_evaptrans;   /* write evaptrans? */
-  int write_netcdf_evaptrans_sum;       /* write evaptrans_sum? */
-  int write_netcdf_ice_frac;    /* write soil ice fraction? */
-  int write_netcdf_overland_sum;        /* write overland_sum? */
-  int write_netcdf_overland_bc_flux;    /* write overland_bc_flux? */
+  int write_netcdf_evaptrans_sum;    /* write evaptrans_sum? */
+  int write_netcdf_ice_impedance;    /* write soil ice impedance? */
+  int write_netcdf_overland_sum;     /* write overland_sum? */
+  int write_netcdf_overland_bc_flux; /* write overland_bc_flux? */
   int write_netcdf_mask;        /* write mask? */
   int write_netcdf_mannings;    /* write mask? */
   int write_netcdf_subsurface;  /* write subsurface? */
@@ -249,7 +249,7 @@ typedef struct {
   Vector *x_velocity;           /* vector containing x-velocity face values */
   Vector *y_velocity;           /* vector containing y-velocity face values */
   Vector *z_velocity;           /* vector containing z-velocity face values */
-  Vector *ice_fraction;         /* soil ice fraction from eCLM */
+  Vector *ice_impedance;        /* soil ice impedance from eCLM */
 #ifdef HAVE_CLM
   /* RM: vars for pf printing of clm output */
   Vector *eflx_lh_tot;          /* total LH flux from canopy height to atmosphere [W/m^2] */
@@ -851,8 +851,8 @@ SetupRichards(PFModule * this_module)
     instance_xtra->evap_trans = NewVectorType(grid, 1, 1, vector_cell_centered);
     InitVectorAll(instance_xtra->evap_trans, 0.0);
 
-    instance_xtra->ice_fraction = NewVectorType(grid, 1, 1, vector_cell_centered);
-    InitVectorAll(instance_xtra->ice_fraction, 0.0);
+    instance_xtra->ice_impedance = NewVectorType(grid, 1, 1, vector_cell_centered);
+    InitVectorAll(instance_xtra->ice_impedance, 0.0);
 
     if (public_xtra->evap_trans_file)
     {
@@ -1378,6 +1378,27 @@ SetupRichards(PFModule * this_module)
     }
 
     /*-----------------------------------------------------------------
+     * Print out Subsurface data in NetCDF?
+     *-----------------------------------------------------------------*/
+    // if (public_xtra->write_netcdf_ice_impedance)
+    // {
+    //   sprintf(nc_postfix, "%05d", instance_xtra->file_number);
+    //   WritePFNC(file_prefix, nc_postfix, t,
+    //             ProblemDataFBx(problem_data),
+    //             public_xtra->numVarTimeVariant, "FBx", 3, true,
+    //             public_xtra->numVarIni);
+    //   WritePFNC(file_prefix, nc_postfix, t,
+    //             ProblemDataFBy(problem_data),
+    //             public_xtra->numVarTimeVariant, "FBy", 3, true,
+    //             public_xtra->numVarIni);
+    //   WritePFNC(file_prefix, nc_postfix, t,
+    //             ProblemDataFBz(problem_data),
+    //             public_xtra->numVarTimeVariant, "FBz", 3, true,
+    //             public_xtra->numVarIni);
+    //   any_file_dumped = 1;
+    // }
+
+    /*-----------------------------------------------------------------
      * Print out Slopes in NetCDF?
      *-----------------------------------------------------------------*/
     if (public_xtra->write_netcdf_slopes)
@@ -1576,8 +1597,11 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
 #ifdef HAVE_OAS3
   Grid *grid = (instance_xtra->grid);
   Subgrid *subgrid;
-  Subvector *p_sub, *s_sub, *et_sub, *ice_frac_sub, *m_sub, *po_sub, *dz_sub;
-  double *pp, *sp, *et, *ice_frac, *ms, *po_dat, *dz_dat;
+  Subvector *p_sub, *s_sub, *et_sub, *ice_impedance_sub, *m_sub, *po_sub, *dz_sub;
+  Vector *FBx = ProblemDataFBx(problem_data);
+  Vector *FBy = ProblemDataFBy(problem_data);
+  Vector *FBz = ProblemDataFBz(problem_data);
+  double *pp, *sp, *et, *ice_impedance, *ms, *po_dat, *dz_dat;
   double sw_lat = .0;
   double sw_lon = .0;
 #endif
@@ -1764,7 +1788,8 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
         p_sub = VectorSubvector(instance_xtra->pressure, is);
         s_sub = VectorSubvector(instance_xtra->saturation, is);
         et_sub = VectorSubvector(evap_trans, is);
-        ice_frac_sub = VectorSubvector(instance_xtra->ice_fraction, is);
+        ice_impedance_sub = VectorSubvector(instance_xtra->ice_impedance, is);
+        //ice_impedance_sub = VectorSubvector(FBx, is);
         m_sub = VectorSubvector(instance_xtra->mask, is);
         po_sub = VectorSubvector(porosity, is);
         dz_sub = VectorSubvector(instance_xtra->dz_mult, is);
@@ -1781,7 +1806,7 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
         sp = SubvectorData(s_sub);
         pp = SubvectorData(p_sub);
         et = SubvectorData(et_sub);
-        ice_frac = SubvectorData(ice_frac_sub);
+        ice_impedance = SubvectorData(ice_impedance_sub);
         ms = SubvectorData(m_sub);
         po_dat = SubvectorData(po_sub);
         dz_dat = SubvectorData(dz_sub);
@@ -1789,13 +1814,17 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
         CALL_send_fld2_clm(pp, sp, ms, ix, iy, nx, ny, nz, nx_f, ny_f,
                            t,po_dat,dz_dat);
         amps_Sync(amps_CommWorld);
-        CALL_receive_fld2_clm(et, ice_frac, ms, ix, iy, nx, ny, nz, nx_f, ny_f, t);
+        CALL_receive_fld2_clm(et, ice_impedance, ms, ix, iy, nx, ny, nz, nx_f, ny_f, t);
       }
       amps_Sync(amps_CommWorld);
       handle = InitVectorUpdate(evap_trans, VectorUpdateAll);
       FinalizeVectorUpdate(handle);
-      handle = InitVectorUpdate(instance_xtra->ice_fraction, VectorUpdateAll);
+       handle = InitVectorUpdate(instance_xtra->ice_impedance, VectorUpdateAll);
+      //handle = InitVectorUpdate(FBx, VectorUpdateAll);
       FinalizeVectorUpdate(handle);
+      //PFVCopy(FBx, FBy);
+      //PFVCopy(FBx, FBz);
+
 #endif // end to HAVE_OAS3 CALL
 
       // IMF: Added to include CLM dumps in file_number updating.
@@ -2887,7 +2916,7 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
                                    instance_xtra->old_pressure,
                                    evap_trans,
                                    instance_xtra->ovrl_bc_flx,
-                                   instance_xtra->ice_fraction,
+                                   instance_xtra->ice_impedance,
                                    instance_xtra->x_velocity,
                                    instance_xtra->y_velocity,
                                    instance_xtra->z_velocity));
@@ -3098,7 +3127,7 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
           || public_xtra->write_netcdf_satur
           || public_xtra->write_netcdf_evaptrans
           || public_xtra->write_netcdf_evaptrans_sum
-          || public_xtra->write_netcdf_ice_frac
+          || public_xtra->write_netcdf_ice_impedance
           || public_xtra->write_netcdf_overland_sum
           || public_xtra->write_netcdf_overland_bc_flux)
       {
@@ -3273,12 +3302,24 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
         any_file_dumped = 1;
       }
 
-      if (public_xtra->write_netcdf_ice_frac)
+      if (public_xtra->write_netcdf_ice_impedance)
       {
         sprintf(nc_postfix, "%05d", instance_xtra->file_number);
-        WritePFNC(file_prefix, nc_postfix, t, instance_xtra->ice_fraction,
-                  public_xtra->numVarTimeVariant, "ice_fraction", 3,
+        WritePFNC(file_prefix, nc_postfix, t, instance_xtra->ice_impedance,
+                  public_xtra->numVarTimeVariant, "ice_impedance", 3,
                   false, public_xtra->numVarIni);
+        // WritePFNC(file_prefix, nc_postfix, t,
+        //           ProblemDataFBx(problem_data),
+        //           public_xtra->numVarTimeVariant, "FBx", 3, true,
+        //           public_xtra->numVarIni);
+        // WritePFNC(file_prefix, nc_postfix, t,
+        //           ProblemDataFBy(problem_data),
+        //           public_xtra->numVarTimeVariant, "FBy", 3, true,
+        //           public_xtra->numVarIni);
+        // WritePFNC(file_prefix, nc_postfix, t,
+        //           ProblemDataFBz(problem_data),
+        //           public_xtra->numVarTimeVariant, "FBz", 3, true,
+        //           public_xtra->numVarIni);
         any_file_dumped = 1;
       }
 
@@ -4095,7 +4136,7 @@ TeardownRichards(PFModule * this_module)
   FreeVector(instance_xtra->y_velocity);
   FreeVector(instance_xtra->z_velocity);
   FreeVector(instance_xtra->evap_trans);
-  FreeVector(instance_xtra->ice_fraction);
+  FreeVector(instance_xtra->ice_impedance);
 
   if (instance_xtra->evap_trans_sum)
   {
@@ -5382,14 +5423,14 @@ SolverRichardsNewPublicXtra(char *name)
   }
   public_xtra->write_netcdf_evaptrans = switch_value;
 
-  sprintf(key, "NetCDF.WriteIceFrac");
+  sprintf(key, "NetCDF.WriteIceImpedance");
   switch_name = GetStringDefault(key, "False");
   switch_value = NA_NameToIndexExitOnError(switch_na, switch_name, key);
   if (switch_value == 1)
   {
     public_xtra->numVarTimeVariant++;
   }
-  public_xtra->write_netcdf_ice_frac = switch_value;
+  public_xtra->write_netcdf_ice_impedance = switch_value;
 
   sprintf(key, "NetCDF.WriteEvapTransSum");
   switch_name = GetStringDefault(key, "False");
@@ -5480,7 +5521,7 @@ SolverRichardsNewPublicXtra(char *name)
   if (public_xtra->write_netcdf_press || public_xtra->write_netcdf_satur
       || public_xtra->write_netcdf_evaptrans
       || public_xtra->write_netcdf_evaptrans_sum
-      || public_xtra->write_netcdf_ice_frac
+      || public_xtra->write_netcdf_ice_impedance
       || public_xtra->write_netcdf_overland_sum
       || public_xtra->write_netcdf_overland_bc_flux)
 
