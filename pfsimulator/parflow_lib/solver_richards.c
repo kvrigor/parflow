@@ -1378,27 +1378,6 @@ SetupRichards(PFModule * this_module)
     }
 
     /*-----------------------------------------------------------------
-     * Print out Subsurface data in NetCDF?
-     *-----------------------------------------------------------------*/
-    // if (public_xtra->write_netcdf_ice_impedance)
-    // {
-    //   sprintf(nc_postfix, "%05d", instance_xtra->file_number);
-    //   WritePFNC(file_prefix, nc_postfix, t,
-    //             ProblemDataFBx(problem_data),
-    //             public_xtra->numVarTimeVariant, "FBx", 3, true,
-    //             public_xtra->numVarIni);
-    //   WritePFNC(file_prefix, nc_postfix, t,
-    //             ProblemDataFBy(problem_data),
-    //             public_xtra->numVarTimeVariant, "FBy", 3, true,
-    //             public_xtra->numVarIni);
-    //   WritePFNC(file_prefix, nc_postfix, t,
-    //             ProblemDataFBz(problem_data),
-    //             public_xtra->numVarTimeVariant, "FBz", 3, true,
-    //             public_xtra->numVarIni);
-    //   any_file_dumped = 1;
-    // }
-
-    /*-----------------------------------------------------------------
      * Print out Slopes in NetCDF?
      *-----------------------------------------------------------------*/
     if (public_xtra->write_netcdf_slopes)
@@ -1598,9 +1577,6 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
   Grid *grid = (instance_xtra->grid);
   Subgrid *subgrid;
   Subvector *p_sub, *s_sub, *et_sub, *ice_impedance_sub, *m_sub, *po_sub, *dz_sub;
-  Vector *FBx = ProblemDataFBx(problem_data);
-  Vector *FBy = ProblemDataFBy(problem_data);
-  Vector *FBz = ProblemDataFBz(problem_data);
   double *pp, *sp, *et, *ice_impedance, *ms, *po_dat, *dz_dat;
   double sw_lat = .0;
   double sw_lon = .0;
@@ -1789,7 +1765,6 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
         s_sub = VectorSubvector(instance_xtra->saturation, is);
         et_sub = VectorSubvector(evap_trans, is);
         ice_impedance_sub = VectorSubvector(instance_xtra->ice_impedance, is);
-        //ice_impedance_sub = VectorSubvector(FBx, is);
         m_sub = VectorSubvector(instance_xtra->mask, is);
         po_sub = VectorSubvector(porosity, is);
         dz_sub = VectorSubvector(instance_xtra->dz_mult, is);
@@ -1820,10 +1795,7 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
       handle = InitVectorUpdate(evap_trans, VectorUpdateAll);
       FinalizeVectorUpdate(handle);
        handle = InitVectorUpdate(instance_xtra->ice_impedance, VectorUpdateAll);
-      //handle = InitVectorUpdate(FBx, VectorUpdateAll);
       FinalizeVectorUpdate(handle);
-      //PFVCopy(FBx, FBy);
-      //PFVCopy(FBx, FBz);
 
 #endif // end to HAVE_OAS3 CALL
 
@@ -3308,18 +3280,6 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
         WritePFNC(file_prefix, nc_postfix, t, instance_xtra->ice_impedance,
                   public_xtra->numVarTimeVariant, "ice_impedance", 3,
                   false, public_xtra->numVarIni);
-        // WritePFNC(file_prefix, nc_postfix, t,
-        //           ProblemDataFBx(problem_data),
-        //           public_xtra->numVarTimeVariant, "FBx", 3, true,
-        //           public_xtra->numVarIni);
-        // WritePFNC(file_prefix, nc_postfix, t,
-        //           ProblemDataFBy(problem_data),
-        //           public_xtra->numVarTimeVariant, "FBy", 3, true,
-        //           public_xtra->numVarIni);
-        // WritePFNC(file_prefix, nc_postfix, t,
-        //           ProblemDataFBz(problem_data),
-        //           public_xtra->numVarTimeVariant, "FBz", 3, true,
-        //           public_xtra->numVarIni);
         any_file_dumped = 1;
       }
 

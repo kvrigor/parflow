@@ -407,7 +407,7 @@ void         PhaseRelPerm(
                           Vector *     phase_rel_perm, /* Vector of return rel. perms. at each block */
                           Vector *     phase_pressure, /* Vector of pressures at each block */
                           Vector *     phase_density,  /* Vector of densities at each block */
-                          Vector *     ice_fraction,   /* Vector of soil ice fraction at each block */
+                          Vector *     ice_impedance,  /* Vector of soil ice impedance at each block */
                           double       gravity, /* Magnitude of gravity in neg. z direction */
                           ProblemData *problem_data, /* Contains geometry info for the problem */
                           int          fcn) /* Flag determining what to calculate
