@@ -86,7 +86,7 @@ void     KINSolFunctionEval(
   double time = StateTime(((State*)current_state));
   Vector      *evap_trans = StateEvapTrans(((State*)current_state));
   Vector      *ovrl_bc_flx = StateOvrlBcFlx(((State*)current_state));
-  Vector      *ice_fraction = StateIceFraction(((State*)current_state));
+  Vector      *ice_impedance = StateIceImpedance(((State*)current_state));
 
   /* velocity vectors jjb */
   Vector       *x_velocity = StateXvel(((State*)current_state));
@@ -98,7 +98,7 @@ void     KINSolFunctionEval(
   PFModuleInvokeType(NlFunctionEvalInvoke, nl_function_eval,
                      (pressure, fval, problem_data, saturation, old_saturation,
                       density, old_density, dt, time, old_pressure, evap_trans,
-                      ovrl_bc_flx, ice_fraction, x_velocity, y_velocity, z_velocity));
+                      ovrl_bc_flx, ice_impedance, x_velocity, y_velocity, z_velocity));
 
   return;
 }
@@ -120,7 +120,7 @@ void NlFunctionEval(Vector *     pressure, /* Current pressure values */
                     Vector *     old_pressure,
                     Vector *     evap_trans,    /*sk sink term from land surface model*/
                     Vector *     ovrl_bc_flx,   /*sk overland flow boundary fluxes*/
-                    Vector *     ice_fraction,  /* soil ice fraction */
+                    Vector *     ice_impedance,  /* soil ice impedance */
                     Vector *     x_velocity,    /* velocity vectors jjb */
                     Vector *     y_velocity,
                     Vector *     z_velocity)
@@ -177,10 +177,17 @@ void NlFunctionEval(Vector *     pressure, /* Current pressure values */
   Subvector   *z_mult_sub;    //@RMM
   double      *z_mult_dat;    //@RMM
 
-/* @RMM Flow Barrier / Boundary values */
+#ifdef HAVE_ECLM
+  amps_Printf("DEBUG: Initializing Flow barrier vectors with ice impedance values from eCLM.\n");
+  Vector      *FBx = ice_impedance;
+  Vector      *FBy = ice_impedance;
+  Vector      *FBz = ice_impedance;
+#else
+  /* @RMM Flow Barrier / Boundary values */
   Vector      *FBx = ProblemDataFBx(problem_data);
   Vector      *FBy = ProblemDataFBy(problem_data);
   Vector      *FBz = ProblemDataFBz(problem_data);
+#endif
   Subvector   *FBx_sub, *FBy_sub, *FBz_sub;  //@RMM
   double      *FBx_dat=NULL, *FBy_dat=NULL, *FBz_dat=NULL;   //@RMM
 
@@ -540,7 +547,7 @@ void NlFunctionEval(Vector *     pressure, /* Current pressure values */
    * phase source values */
 
   PFModuleInvokeType(PhaseRelPermInvoke, rel_perm_module,
-                     (rel_perm, pressure, density, ice_fraction, gravity, problem_data,
+                     (rel_perm, pressure, density, ice_impedance, gravity, problem_data,
                       CALCFCN));
 
 
