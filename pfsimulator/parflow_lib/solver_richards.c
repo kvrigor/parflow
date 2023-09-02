@@ -4187,6 +4187,15 @@ TeardownRichards(PFModule * this_module)
     int k;
 
     log_file = OpenLogFile("SolverRichards");
+#if defined(HAVE_CLM)
+    fprintf(log_file, "Coupled land surface model: internal CLM\n\n");
+#elif defined(HAVE_ECLM)
+    fprintf(log_file, "Coupled land surface model: eCLM (experimental)\n\n");
+#elif defined(HAVE_OAS3)
+    fprintf(log_file, "Coupled land surface model: CLM3.5\n\n");
+#else
+    fprintf(log_file, "Coupled land surface model: none\n\n");
+#endif
 
     if (start_count >= 0)
     {

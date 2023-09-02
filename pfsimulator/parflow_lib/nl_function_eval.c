@@ -178,7 +178,8 @@ void NlFunctionEval(Vector *     pressure, /* Current pressure values */
   double      *z_mult_dat;    //@RMM
 
 #ifdef HAVE_ECLM
-  amps_Printf("DEBUG: Initializing Flow barrier vectors with ice impedance values from eCLM.\n");
+  if (!amps_Rank(amps_CommWorld))
+    amps_Printf("DEBUG: Initializing Flow barrier vectors with ice impedance values from eCLM.\n");
   Vector      *FBx = ice_impedance;
   Vector      *FBy = ice_impedance;
   Vector      *FBz = ice_impedance;

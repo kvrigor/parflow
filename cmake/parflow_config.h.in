@@ -56,6 +56,9 @@
 #cmakedefine PARFLOW_HAVE_OAS3
 #cmakedefine HAVE_OAS3
 
+#cmakedefine PARFLOW_HAVE_ECLM
+#cmakedefine HAVE_ECLM
+
 #cmakedefine PARFLOW_HAVE_MALLOC_H
 #cmakedefine HAVE_MALLOC_H
 
