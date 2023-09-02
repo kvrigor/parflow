@@ -255,6 +255,14 @@ void    RichardsJacobianEval(
   double      *z_mult_dat;    //@RMM
 
   /* @RMM Flow Barrier / Boundary values */
+#ifdef HAVE_ECLM
+  amps_Printf("DEBUG: WARNING! eCLM ice impedance not yet implemented in richard_jacobian_eval.c\n")
+  //TODO: RichardsJacobianEval gets called when Solver.Nonlinear.UseJacobian=True.
+  //      Ice impedance must also be implemented here.
+  //Vector      *FBx = ice_impedance;
+  //Vector      *FBy = ice_impedance;
+  //Vector      *FBz = ice_impedance;
+#endif
   Vector      *FBx = ProblemDataFBx(problem_data);
   Vector      *FBy = ProblemDataFBy(problem_data);
   Vector      *FBz = ProblemDataFBz(problem_data);
