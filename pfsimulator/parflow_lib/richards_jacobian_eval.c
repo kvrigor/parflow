@@ -146,6 +146,7 @@ int       KINSolMatVec(
   Vector      *old_pressure = StateOldPressure(((State*)current_state));
   Vector      *saturation = StateSaturation(((State*)current_state));
   Vector      *density = StateDensity(((State*)current_state));
+  Vector      *ice_impedance = StateIceImpedance(((State*)current_state));
   ProblemData *problem_data = StateProblemData(((State*)current_state));
   double dt = StateDt(((State*)current_state));
   double time = StateTime(((State*)current_state));
@@ -164,7 +165,7 @@ int       KINSolMatVec(
   if (*recompute)
   {
     PFModuleInvokeType(RichardsJacobianEvalInvoke, richards_jacobian_eval,
-                       (pressure, old_pressure, &J, &JC, saturation, density, problem_data,
+                       (pressure, old_pressure, &J, &JC, saturation, density, ice_impedance, problem_data,
                         dt, time, 0));
 
     *recompute = 0;
@@ -185,20 +186,21 @@ int       KINSolMatVec(
  *  pressure values.  */
 
 void    RichardsJacobianEval(
-                             Vector *     pressure, /* Current pressure values */
-                             Vector *     old_pressure, /* Pressure values at previous timestep */
-                             Matrix **    ptr_to_J, /* Pointer to the J pointer - this will be set
-                                                     * to instance_xtra pointer at end */
-                             Matrix **    ptr_to_JC, /* Pointer to the JC pointer - this will be set
-                                                      * to instance_xtra pointer at end */
-                             Vector *     saturation, /* Saturation / work vector */
-                             Vector *     density, /* Density vector */
-                             ProblemData *problem_data, /* Geometry data for problem */
-                             double       dt, /* Time step size */
-                             double       time, /* New time value */
-                             int          symm_part) /* Specifies whether to compute just the
-                                                      * symmetric part of the Jacobian (1), or the
-                                                      * full Jacobian */
+                             Vector *     pressure,       /* Current pressure values */
+                             Vector *     old_pressure,   /* Pressure values at previous timestep */
+                             Matrix **    ptr_to_J,       /* Pointer to the J pointer - this will be set
+                                                           * to instance_xtra pointer at end */
+                             Matrix **    ptr_to_JC,      /* Pointer to the JC pointer - this will be set
+                                                           * to instance_xtra pointer at end */
+                             Vector *     saturation,     /* Saturation / work vector */
+                             Vector *     density,        /* Density vector */
+                             Vector *     ice_impedance,  /* Ice impedance vector */
+                             ProblemData *problem_data,   /* Geometry data for problem */
+                             double       dt,             /* Time step size */
+                             double       time,           /* New time value */
+                             int          symm_part)      /* Specifies whether to compute just the
+                                                           * symmetric part of the Jacobian (1), or the
+                                                           * full Jacobian */
 {
   PUSH_NVTX("RichardsJacobianEval",1)
 
@@ -257,16 +259,20 @@ void    RichardsJacobianEval(
   /* @RMM Flow Barrier / Boundary values */
 #ifdef HAVE_ECLM
   if (!amps_Rank(amps_CommWorld))
-    amps_Printf("DEBUG: WARNING! eCLM ice impedance not yet implemented in richard_jacobian_eval.c\n");
-  //TODO: RichardsJacobianEval gets called when Solver.Nonlinear.UseJacobian=True.
-  //      Ice impedance must also be implemented here.
-  //Vector      *FBx = ice_impedance;
-  //Vector      *FBy = ice_impedance;
-  //Vector      *FBz = ice_impedance;
-#endif
+  {
+    amps_Printf("DEBUG: Initializing Flow barrier vectors with ice impedance values from eCLM.\n");
+    //*(int*)0 = 0;
+  }
+
+  Vector      *FBx = ice_impedance;
+  Vector      *FBy = ice_impedance;
+  Vector      *FBz = ice_impedance;
+#else
   Vector      *FBx = ProblemDataFBx(problem_data);
   Vector      *FBy = ProblemDataFBy(problem_data);
   Vector      *FBz = ProblemDataFBz(problem_data);
+#endif
+
   Subvector   *FBx_sub, *FBy_sub, *FBz_sub;    //@RMM
   double      *FBx_dat, *FBy_dat, *FBz_dat;     //@RMM
 

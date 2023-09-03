@@ -308,12 +308,12 @@ void KinsolNonlinSolverFreePublicXtra(void);
 int KinsolNonlinSolverSizeOfTempData(void);
 
 typedef void (*KinsolPCInvoke) (Vector *rhs);
-typedef PFModule * (*KinsolPCInitInstanceXtraInvoke) (Problem *problem, Grid *grid, ProblemData *problem_data, double *temp_data, Vector *pressure, Vector *old_pressure, Vector *saturation, Vector *density, double dt, double time);
+typedef PFModule * (*KinsolPCInitInstanceXtraInvoke) (Problem *problem, Grid *grid, ProblemData *problem_data, double *temp_data, Vector *pressure, Vector *old_pressure, Vector *saturation, Vector *density, Vector *ice_impedance, double dt, double time);
 typedef PFModule *(*KinsolPCNewPublicXtraInvoke) (char *name, char *pc_name);
 
 /* kinsol_pc.c */
 void KinsolPC(Vector *rhs);
-PFModule *KinsolPCInitInstanceXtra(Problem *problem, Grid *grid, ProblemData *problem_data, double *temp_data, Vector *pressure, Vector *old_pressure, Vector *saturation, Vector *density, double dt, double time);
+PFModule *KinsolPCInitInstanceXtra(Problem *problem, Grid *grid, ProblemData *problem_data, double *temp_data, Vector *pressure, Vector *old_pressure, Vector *saturation, Vector *density, Vector *ice_impedance, double dt, double time);
 void KinsolPCFreeInstanceXtra(void);
 PFModule *KinsolPCNewPublicXtra(char *name, char *pc_name);
 void KinsolPCFreePublicXtra(void);
@@ -1050,12 +1050,12 @@ void DeleteSubregion(SubregionArray *sr_array, int index);
 void AppendSubregionArray(SubregionArray *sr_array_0, SubregionArray *sr_array_1);
 
 
-typedef void (*RichardsJacobianEvalInvoke) (Vector *pressure, Vector *old_pressure, Matrix **ptr_to_J, Matrix **ptr_to_JC, Vector *saturation, Vector *density, ProblemData *problem_data, double dt, double time, int symm_part);
+typedef void (*RichardsJacobianEvalInvoke) (Vector *pressure, Vector *old_pressure, Matrix **ptr_to_J, Matrix **ptr_to_JC, Vector *saturation, Vector *density, Vector *ice_impedance, ProblemData *problem_data, double dt, double time, int symm_part);
 typedef PFModule *(*RichardsJacobianEvalInitInstanceXtraInvoke) (Problem *problem, Grid *grid, ProblemData *problem_data, double *temp_data, int symmetric_jac);
 typedef PFModule *(*RichardsJacobianEvalNewPublicXtraInvoke) (char *name);
 /* richards_jacobian_eval.c */
 int KINSolMatVec(void *current_state, N_Vector x, N_Vector y, int *recompute, N_Vector pressure);
-void RichardsJacobianEval(Vector *pressure, Vector *old_pressure, Matrix **ptr_to_J, Matrix **ptr_to_JC, Vector *saturation, Vector *density, ProblemData *problem_data, double dt, double time, int symm_part);
+void RichardsJacobianEval(Vector *pressure, Vector *old_pressure, Matrix **ptr_to_J, Matrix **ptr_to_JC, Vector *saturation, Vector *density, Vector *ice_impedance, ProblemData *problem_data, double dt, double time, int symm_part);
 PFModule *RichardsJacobianEvalInitInstanceXtra(Problem *problem, Grid *grid, ProblemData *problem_data, double *temp_data, int symmetric_jac);
 void RichardsJacobianEvalFreeInstanceXtra(void);
 PFModule *RichardsJacobianEvalNewPublicXtra(char *name);

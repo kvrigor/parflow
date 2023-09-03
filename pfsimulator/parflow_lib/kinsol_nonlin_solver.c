@@ -107,7 +107,9 @@ int  KINSolInitPC(
   ProblemData *problem_data = StateProblemData(((State*)current_state));
   Vector      *saturation = StateSaturation(((State*)current_state));
   Vector      *density = StateDensity(((State*)current_state));
+  Vector      *ice_impedance = StateIceImpedance(((State*)current_state));
   Vector      *old_pressure = StateOldPressure(((State*)current_state));
+
   double dt = StateDt(((State*)current_state));
   double time = StateTime(((State*)current_state));
 
@@ -125,7 +127,7 @@ int  KINSolInitPC(
    * itself */
 
   PFModuleReNewInstanceType(KinsolPCInitInstanceXtraInvoke, precond, (NULL, NULL, problem_data, NULL,
-                                                                      pressure, old_pressure, saturation, density, dt, time));
+                                                                      pressure, old_pressure, saturation, density, ice_impedance, dt, time));
   return(0);
 }
 
@@ -353,7 +355,7 @@ PFModule  *KinsolNonlinSolverInitInstanceXtra(
       instance_xtra->precond =
         PFModuleNewInstanceType(KinsolPCInitInstanceXtraInvoke, public_xtra->precond,
                                 (problem, grid, problem_data, temp_data,
-                                 NULL, NULL, NULL, NULL, 0, 0));
+                                 NULL, NULL, NULL, NULL, NULL, 0, 0));
     else
       instance_xtra->precond = NULL;
 
@@ -361,11 +363,14 @@ PFModule  *KinsolNonlinSolverInitInstanceXtra(
       PFModuleNewInstanceType(NlFunctionEvalInitInstanceXtraInvoke, public_xtra->nl_function_eval,
                               (problem, grid, temp_data));
 
-    if (public_xtra->richards_jacobian_eval != NULL)
+    if (public_xtra->richards_jacobian_eval != NULL) {
       /* Initialize instance for nonsymmetric matrix */
+      if (!amps_Rank(amps_CommWorld)) {}
+        amps_Printf("DEBUG: richards_jacobian_eval is not NULL!!\n");
       instance_xtra->richards_jacobian_eval =
         PFModuleNewInstanceType(RichardsJacobianEvalInitInstanceXtraInvoke, public_xtra->richards_jacobian_eval,
                                 (problem, grid, problem_data, temp_data, 0));
+    }
     else
       instance_xtra->richards_jacobian_eval = NULL;
   }
@@ -375,7 +380,7 @@ PFModule  *KinsolNonlinSolverInitInstanceXtra(
       PFModuleReNewInstanceType(KinsolPCInitInstanceXtraInvoke,
                                 instance_xtra->precond,
                                 (problem, grid, problem_data, temp_data,
-                                 NULL, NULL, NULL, NULL, 0, 0));
+                                 NULL, NULL, NULL, NULL, NULL, 0, 0));
 
     PFModuleReNewInstanceType(NlFunctionEvalInitInstanceXtraInvoke, instance_xtra->nl_function_eval,
                               (problem, grid, temp_data));
@@ -612,6 +617,8 @@ PFModule  *KinsolNonlinSolverNewPublicXtra()
       InputError("Invalid switch value <%s> for key <%s>", switch_name, key);
     }
   }
+  if (!amps_Rank(amps_CommWorld))
+    amps_Printf("DEBUG: Solver.Nonlinear.UseJacobian=%i\n", switch_value);
   NA_FreeNameArray(switch_na);
 
   sprintf(key, "Solver.Nonlinear.DerivativeEpsilon");
@@ -671,12 +678,15 @@ PFModule  *KinsolNonlinSolverNewPublicXtra()
   public_xtra->neq = ((public_xtra->max_restarts) + 1)
                      * (public_xtra->krylov_dimension);
 
-  if (public_xtra->matvec != NULL)
+  if (public_xtra->matvec != NULL) {
+    if (!amps_Rank(amps_CommWorld))
+      amps_Printf("DEBUG: matvec is not NULL!!\n");
     public_xtra->richards_jacobian_eval =
       PFModuleNewModuleType(
                             RichardsJacobianEvalNewPublicXtraInvoke,
                             RichardsJacobianEval,
                             ("Solver.Nonlinear.Jacobian"));
+  }
   else
     public_xtra->richards_jacobian_eval = NULL;
 
