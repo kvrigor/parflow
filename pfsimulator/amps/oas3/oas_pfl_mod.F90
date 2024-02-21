@@ -123,7 +123,7 @@ contains
     if (ierror /= 0) call oasis_abort (comp_id, 'oas_pfl_define', 'oasis_enddef failed')
   end subroutine oas_pfl_define
 
-  subroutine send_fld2_clm(pressure, saturation, topo, ix, iy, nx, ny, nz, nx_f, ny_f, pstep, porosity, dz) bind(c, name='send_fld2_clm_')
+  subroutine send_fld2_clm(pressure, saturation, topo, ix, iy, nx, ny, nz, nx_f, ny_f, pstep, porosity,dz_mult,dz) bind(c, name='send_fld2_clm_')
     !----------------------------------------------------------------------------
     ! Sends pressure head and soil liquid water from ParFlow to eCLM
     ! pressure is converted from [m] to [mm]
@@ -137,7 +137,8 @@ contains
                                  saturation((nx+2)*(ny+2)*(nz+2)), & ! saturation [-]
                                  topo((nx+2)*(ny+2)*(nz+2)),       & ! topography mask (0 for inactive, 1 for active)
                                  porosity((nx+2)*(ny+2)*(nz+2)),   & ! porosity [m^3/m^3]
-                                 dz((nx+2)*(ny+2)*(nz+2))            ! subsurface layer thickness [m]
+                                 dz_mult((nx+2)*(ny+2)*(nz+2)),    & ! dz scaling values [unitless]
+                                 dz                                  ! size of gridcell in z-direction [m]
                                                                      ! (nx+2)*(ny+2)*(nz+2) = total number of subgrid cells; the
                                                                      !  extra "+2" terms account for the ghost nodes/halo points
     ! Local variables
@@ -162,8 +163,8 @@ contains
           do k = 1, nlevgrnd              !    eCLM: 1=topmost layer, nlevgrnd=deepest layer
             z = top_z_level(i,j) - (k-1)  ! ParFlow: 1=deepest layer, nz=topmost layer
             l = flattened_array_index(i, j, z, nx_f, ny_f)
-            pressure_3d(i,j,k) = pressure(l)*1000.0                       ! multiply these quantities by 1000
-            h2osoi_liq_3d(i,j,k) = saturation(l)*porosity(l)*dz(l)*1000   ! to convert from [m] to [mm]
+            pressure_3d(i,j,k) = pressure(l)*1000.0                          ! multiply these quantities by 1000
+            h2osoi_liq_3d(i,j,k) = saturation(l)*porosity(l)*dz*dz_mult(l)*1000   ! to convert from [m] to [mm]
           end do
         end if
       end do

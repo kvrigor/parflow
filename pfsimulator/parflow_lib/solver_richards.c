@@ -1757,6 +1757,7 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
       ForSubgridI(is, GridSubgrids(grid))
       {
         int ix, iy, nx, ny, nz, nx_f, ny_f;
+        double dz;
 
         subgrid = GridSubgrid(grid, is);
 
@@ -1774,9 +1775,9 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
         nx = SubgridNX(subgrid);
         ny = SubgridNY(subgrid);
         nz = SubgridNZ(subgrid);
+        dz = SubgridDZ(subgrid);
         nx_f = SubvectorNX(et_sub);
         ny_f = SubvectorNY(et_sub);
-
 
         sp = SubvectorData(s_sub);
         pp = SubvectorData(p_sub);
@@ -1787,7 +1788,7 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
         dz_dat = SubvectorData(dz_sub);
         //CPS       amps_Printf("Calling oasis send/receive for time  %3.1f \n", t);
         CALL_send_fld2_clm(pp, sp, ms, ix, iy, nx, ny, nz, nx_f, ny_f,
-                           t,po_dat,dz_dat);
+                           t,po_dat,dz_dat,dz);
         amps_Sync(amps_CommWorld);
         CALL_receive_fld2_clm(et, ice_impedance, ms, ix, iy, nx, ny, nz, nx_f, ny_f, t);
       }
