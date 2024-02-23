@@ -499,10 +499,10 @@ if ( ${PARFLOW_HAVE_ECLM} )
   endif (HAVE_CLM)
   if (NOT HAVE_OAS3)
     message(FATAL_ERROR "ERROR: OASIS is required when compiling with PARFLOW_HAVE_ECLM=ON (check OAS3_ROOT variable)")
-  else (HAVE_OAS3)
+  else()
     message(WARNING "Enabling components for ParFlow-eCLM coupled model (experimental feature!)")
     set (HAVE_ECLM ${PARFLOW_HAVE_ECLM})
-  endif (HAVE_OAS3)
+  endif (NOT HAVE_OAS3)
 endif ( ${PARFLOW_HAVE_ECLM} )
 #
 # Parflow specific configuration options

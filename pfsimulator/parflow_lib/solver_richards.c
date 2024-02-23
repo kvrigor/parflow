@@ -242,6 +242,7 @@ typedef struct {
   Vector *mask;
 
   Vector *evap_trans;           /* sk: Vector that contains the sink terms from the land surface model */
+  Vector *ice_impedance;        /* soil ice impedance from eCLM */
   Vector *evap_trans_sum;       /* running sum of evaporation and transpiration */
   Vector *overland_sum;
   Vector *ovrl_bc_flx;          /* vector containing outflow at the boundary */
@@ -249,7 +250,6 @@ typedef struct {
   Vector *x_velocity;           /* vector containing x-velocity face values */
   Vector *y_velocity;           /* vector containing y-velocity face values */
   Vector *z_velocity;           /* vector containing z-velocity face values */
-  Vector *ice_impedance;        /* soil ice impedance from eCLM */
 #ifdef HAVE_CLM
   /* RM: vars for pf printing of clm output */
   Vector *eflx_lh_tot;          /* total LH flux from canopy height to atmosphere [W/m^2] */
@@ -852,7 +852,7 @@ SetupRichards(PFModule * this_module)
     InitVectorAll(instance_xtra->evap_trans, 0.0);
 
     instance_xtra->ice_impedance = NewVectorType(grid, 1, 1, vector_cell_centered);
-    InitVectorAll(instance_xtra->ice_impedance, 0.0);
+    InitVectorAll(instance_xtra->ice_impedance, 1.0);
 
     if (public_xtra->evap_trans_file)
     {
@@ -1795,7 +1795,7 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
       amps_Sync(amps_CommWorld);
       handle = InitVectorUpdate(evap_trans, VectorUpdateAll);
       FinalizeVectorUpdate(handle);
-       handle = InitVectorUpdate(instance_xtra->ice_impedance, VectorUpdateAll);
+      handle = InitVectorUpdate(instance_xtra->ice_impedance, VectorUpdateAll);
       FinalizeVectorUpdate(handle);
 
 #endif // end to HAVE_OAS3 CALL
@@ -2888,8 +2888,8 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
                                    problem_data,
                                    instance_xtra->old_pressure,
                                    evap_trans,
-                                   instance_xtra->ovrl_bc_flx,
                                    instance_xtra->ice_impedance,
+                                   instance_xtra->ovrl_bc_flx,
                                    instance_xtra->x_velocity,
                                    instance_xtra->y_velocity,
                                    instance_xtra->z_velocity));

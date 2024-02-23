@@ -85,8 +85,8 @@ void     KINSolFunctionEval(
   double dt = StateDt(((State*)current_state));
   double time = StateTime(((State*)current_state));
   Vector      *evap_trans = StateEvapTrans(((State*)current_state));
-  Vector      *ovrl_bc_flx = StateOvrlBcFlx(((State*)current_state));
   Vector      *ice_impedance = StateIceImpedance(((State*)current_state));
+  Vector      *ovrl_bc_flx = StateOvrlBcFlx(((State*)current_state));
 
   /* velocity vectors jjb */
   Vector       *x_velocity = StateXvel(((State*)current_state));
@@ -98,7 +98,7 @@ void     KINSolFunctionEval(
   PFModuleInvokeType(NlFunctionEvalInvoke, nl_function_eval,
                      (pressure, fval, problem_data, saturation, old_saturation,
                       density, old_density, dt, time, old_pressure, evap_trans,
-                      ovrl_bc_flx, ice_impedance, x_velocity, y_velocity, z_velocity));
+                      ice_impedance, ovrl_bc_flx, x_velocity, y_velocity, z_velocity));
 
   return;
 }
@@ -119,8 +119,8 @@ void NlFunctionEval(Vector *     pressure, /* Current pressure values */
                     double       time, /* New time value */
                     Vector *     old_pressure,
                     Vector *     evap_trans,    /*sk sink term from land surface model*/
-                    Vector *     ovrl_bc_flx,   /*sk overland flow boundary fluxes*/
                     Vector *     ice_impedance,  /* soil ice impedance */
+                    Vector *     ovrl_bc_flx,   /*sk overland flow boundary fluxes*/ 
                     Vector *     x_velocity,    /* velocity vectors jjb */
                     Vector *     y_velocity,
                     Vector *     z_velocity)
@@ -178,8 +178,6 @@ void NlFunctionEval(Vector *     pressure, /* Current pressure values */
   double      *z_mult_dat;    //@RMM
 
 #ifdef HAVE_ECLM
-  if (!amps_Rank(amps_CommWorld))
-    amps_Printf("DEBUG: Initializing Flow barrier vectors with ice impedance values from eCLM.\n");
   Vector      *FBx = ice_impedance;
   Vector      *FBy = ice_impedance;
   Vector      *FBz = ice_impedance;
@@ -189,9 +187,9 @@ void NlFunctionEval(Vector *     pressure, /* Current pressure values */
   Vector      *FBy = ProblemDataFBy(problem_data);
   Vector      *FBz = ProblemDataFBz(problem_data);
 #endif
+
   Subvector   *FBx_sub, *FBy_sub, *FBz_sub;  //@RMM
   double      *FBx_dat=NULL, *FBy_dat=NULL, *FBz_dat=NULL;   //@RMM
-
 
   double gravity = ProblemGravity(problem);
   double viscosity = ProblemPhaseViscosity(problem, 0);

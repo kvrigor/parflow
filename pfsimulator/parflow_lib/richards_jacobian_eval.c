@@ -258,12 +258,6 @@ void    RichardsJacobianEval(
 
   /* @RMM Flow Barrier / Boundary values */
 #ifdef HAVE_ECLM
-  if (!amps_Rank(amps_CommWorld))
-  {
-    amps_Printf("DEBUG: Initializing Flow barrier vectors with ice impedance values from eCLM.\n");
-    //*(int*)0 = 0;
-  }
-
   Vector      *FBx = ice_impedance;
   Vector      *FBy = ice_impedance;
   Vector      *FBz = ice_impedance;

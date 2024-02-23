@@ -273,6 +273,8 @@ static inline double VanGLookupSpline(
   int max = num_sample_points + 1;
 
   // This table goes from 0 to fabs(min_pressure_head)
+  //if (!amps_Rank(amps_CommWorld))
+  //  amps_Printf("DEBUG[VanGLookupSpline() @ problem_phase_rel_perm.c]: pressure_head = %3.6e \n",pressure_head);
   assert(pressure_head >= 0);
 
   // SGS TODO add warning in output?
@@ -702,7 +704,6 @@ void         PhaseRelPerm(
                       else
                       {
                         double head = fabs(ppdat[ipp]) / (pddat[ipd] * gravity);
-
                         prdat[ipr] = VanGLookupSpline(head,
                                                       dummy1->lookup_tables[ir],
                                                       CALCFCN);

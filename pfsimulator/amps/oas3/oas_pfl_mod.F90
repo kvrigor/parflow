@@ -212,7 +212,7 @@ contains
 
     ! Save ET fluxes to ParFlow evap_trans vector
     evap_trans = 0.
-    ice_impedance = 0.
+    ice_impedance = 1.
     top_z_level = get_top_z_level(nx, ny, nz, topo)
     do i = 1, nx
       do j = 1, ny
