@@ -851,8 +851,12 @@ SetupRichards(PFModule * this_module)
     instance_xtra->evap_trans = NewVectorType(grid, 1, 1, vector_cell_centered);
     InitVectorAll(instance_xtra->evap_trans, 0.0);
 
+#ifdef HAVE_ECLM
     instance_xtra->ice_impedance = NewVectorType(grid, 1, 1, vector_cell_centered);
     InitVectorAll(instance_xtra->ice_impedance, 1.0);
+#else
+    instance_xtra->ice_impedance = NULL;
+#fi
 
     if (public_xtra->evap_trans_file)
     {
