@@ -856,7 +856,7 @@ SetupRichards(PFModule * this_module)
     InitVectorAll(instance_xtra->ice_impedance, 1.0);
 #else
     instance_xtra->ice_impedance = NULL;
-#fi
+#endif
 
     if (public_xtra->evap_trans_file)
     {
