@@ -354,6 +354,7 @@ static inline double VanGLookupSpline(
   return rel_perm;
 }
 
+#ifdef PF_PRINT_VG_TABLE
 static inline double VanGLookupLinear(
                                       double     pressure_head,
                                       VanGTable *lookup_table,
@@ -396,6 +397,7 @@ static inline double VanGLookupLinear(
 
   return rel_perm;
 }
+#endif
 
 
 /*--------------------------------------------------------------------------
