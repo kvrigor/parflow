@@ -47,7 +47,7 @@ REAL(KIND=8), INTENT(IN)           :: pressure((nx+2)*(ny+2)*(nz+2)),   &! press
                                       topo((nx+2)*(ny+2)*(nz+2)),       &! mask    (0 for inactive, 1 for active)
                                       porosity((nx+2)*(ny+2)*(nz+2)),   &! porosity [m^3/m^3]
                                       dz_mult((nx+2)*(ny+2)*(nz+2)),    &! dz scaling values [unitless]
-                                      dz                                &! size of gridcell in z-direction [m]
+                                      dz                                 ! size of gridcell in z-direction [m]
 
                                                                          ! All vecotrs from parflow on grid w/ ghost nodes for current proc
 !Local Variables 
